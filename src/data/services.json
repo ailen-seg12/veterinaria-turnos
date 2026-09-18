@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "name": "Control",
+    "description": "Control general de la mascota",
+    "duration": 30,
+    "price": 15000,
+    "category": "consulta",
+    "available": true
+  },
+  {
+    "id": 2,
+    "name": "Consulta",
+    "description": "Consulta general veterinaria",
+    "duration": 30,
+    "price": 22000,
+    "category": "consulta",
+    "available": true
+  }
+]
