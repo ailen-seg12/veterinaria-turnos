@@ -1,12 +1,17 @@
-import config from './config/env.config.js';
-import ServiceManager from './managers/ServiceManager.js';
+import express from 'express';
+import servicesRouter from './routes/services.router.js';
 
-const manager = new ServiceManager('./src/data/services.json');
+const app = express();
 
-const services = await manager.getServices();
+// Permite que Express lea JSON enviado en el body
+app.use(express.json());
+app.use('/api/services', servicesRouter);
 
-console.log(`Entorno: ${config.nodeEnv}`);
-console.log(`Puerto configurado: ${config.port}`);
+// Ruta simple para comprobar que la API funciona
+app.get('/', (req, res) => {
+  res.json({
+    message: 'API de veterinaria funcionando'
+  });
+});
 
-console.log('Servicios disponibles:');
-console.log(services);
+export default app;

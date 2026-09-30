@@ -1,25 +1,52 @@
 import fs from 'fs/promises';
 
 class ServiceManager {
-
   constructor(path) {
     this.path = path;
   }
 
-  async getServices() {
+  // Devuelve todos los servicios.
+  // También permite filtrar por category y available.
+  async getServices({ category, available } = {}) {
     const data = await fs.readFile(this.path, 'utf-8');
 
-    return JSON.parse(data);
+    let services = JSON.parse(data);
+
+    // Filtrar por categoría
+    if (category) {
+      const categoryNormalized = category.trim().toLowerCase();
+
+      services = services.filter(
+        service =>
+          service.category.trim().toLowerCase() === categoryNormalized
+      );
+    }
+
+    // Filtrar por disponibilidad
+    if (available !== undefined) {
+      const availableBoolean =
+        available === true || available === 'true';
+
+      services = services.filter(
+        service => service.available === availableBoolean
+      );
+    }
+
+    return services;
   }
 
+  // Busca un servicio por ID
   async getServiceById(id) {
     const services = await this.getServices();
 
-    const service = services.find(service => service.id === id);
+    const service = services.find(
+      service => service.id === id
+    );
 
     return service || null;
   }
 
+  // Agrega un nuevo servicio
   async addService(serviceData) {
     const requiredFields = [
       'name',
@@ -38,7 +65,9 @@ class ServiceManager {
     );
 
     if (missingField) {
-      throw new Error(`Falta el campo obligatorio: ${missingField}`);
+      throw new Error(
+        `Falta el campo obligatorio: ${missingField}`
+      );
     }
 
     const services = await this.getServices();
@@ -46,7 +75,9 @@ class ServiceManager {
     const newId =
       services.length === 0
         ? 1
-        : Math.max(...services.map(service => service.id)) + 1;
+        : Math.max(
+            ...services.map(service => service.id)
+          ) + 1;
 
     const newService = {
       id: newId,
@@ -62,16 +93,20 @@ class ServiceManager {
 
     await fs.writeFile(
       this.path,
-      JSON.stringify(services, null, 2)
+      JSON.stringify(services, null, 2),
+      'utf-8'
     );
 
     return newService;
   }
 
+  // Actualiza un servicio existente
   async updateService(id, updatedData) {
     const services = await this.getServices();
 
-    const index = services.findIndex(service => service.id === id);
+    const index = services.findIndex(
+      service => service.id === id
+    );
 
     if (index === -1) {
       return null;
@@ -80,6 +115,8 @@ class ServiceManager {
     const updatedService = {
       ...services[index],
       ...updatedData,
+
+      // Conserva siempre el ID original
       id: services[index].id
     };
 
@@ -87,16 +124,20 @@ class ServiceManager {
 
     await fs.writeFile(
       this.path,
-      JSON.stringify(services, null, 2)
+      JSON.stringify(services, null, 2),
+      'utf-8'
     );
 
     return updatedService;
   }
 
+  // Elimina un servicio
   async deleteService(id) {
     const services = await this.getServices();
 
-    const index = services.findIndex(service => service.id === id);
+    const index = services.findIndex(
+      service => service.id === id
+    );
 
     if (index === -1) {
       return null;
@@ -108,12 +149,12 @@ class ServiceManager {
 
     await fs.writeFile(
       this.path,
-      JSON.stringify(services, null, 2)
+      JSON.stringify(services, null, 2),
+      'utf-8'
     );
 
     return deletedService;
   }
-
 }
 
 export default ServiceManager;
