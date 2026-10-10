@@ -1,10 +1,13 @@
 import express from 'express';
+import bodyParser from 'body-parser';
 import servicesRouter from './routes/services.router.js';
 
 const app = express();
 
-// Permite que Express lea JSON enviado en el body
-app.use(express.json());
+// Permite leer JSON enviado en el body
+app.use(bodyParser.json());
+
+// Rutas de servicios
 app.use('/api/services', servicesRouter);
 
 // Ruta simple para comprobar que la API funciona
