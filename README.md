@@ -13,12 +13,13 @@ La aplicación permite administrar dos recursos principales:
 
 La información se guarda en archivos JSON utilizando FileSystem, por lo que los datos se conservan aunque el servidor se reinicie.
 
-La lógica de cada recurso se encuentra separada en managers:
+La API está organizada separando responsabilidades en tres partes principales:
 
-- `ServiceManager`
-- `BookingManager`
+- **Routes:** definen los endpoints disponibles.
+- **Controllers:** reciben las solicitudes HTTP, procesan `req.params`, `req.query` y `req.body`, llaman a los managers y generan las respuestas.
+- **Managers:** contienen la lógica de datos y administran la persistencia mediante archivos JSON.
 
-Las rutas de la API se manejan mediante `express.Router()`.
+Esta organización permite mantener el proyecto modular y preparado para seguir creciendo.
 
 ## Tecnologías utilizadas
 
@@ -68,6 +69,55 @@ El servidor se ejecuta por defecto en:
 ```text
 http://localhost:8080
 ```
+
+---
+
+# Arquitectura de la API
+
+La aplicación sigue el siguiente flujo:
+
+```text
+Cliente
+   ↓
+Router
+   ↓
+Controller
+   ↓
+Manager
+   ↓
+Archivo JSON
+```
+
+### Routes
+
+Los routers únicamente definen los endpoints y los conectan con sus controllers correspondientes.
+
+Ejemplo:
+
+```js
+router.get('/:sid', getServiceById);
+```
+
+### Controllers
+
+Los controllers:
+
+- reciben la petición;
+- leen `req.params`, `req.query` y `req.body`;
+- llaman al manager correspondiente;
+- controlan las respuestas HTTP;
+- utilizan `res.status().json()`.
+
+Los controllers no realizan acceso directo a los archivos JSON.
+
+### Managers
+
+Los managers:
+
+- contienen la lógica relacionada con los datos;
+- leen y escriben archivos JSON mediante FileSystem;
+- crean, buscan, actualizan y eliminan recursos;
+- no utilizan `req` ni `res`.
 
 ---
 
@@ -207,7 +257,7 @@ Cada reserva contiene:
 
 El campo `id` se genera automáticamente.
 
-La propiedad `services` contiene los servicios asociados a la reserva.
+La propiedad `services` contiene las referencias a los servicios asociados a la reserva.
 
 Ejemplo:
 
@@ -218,7 +268,7 @@ Ejemplo:
 }
 ```
 
-Si se agrega nuevamente el mismo servicio a una reserva, no se duplica el objeto, sino que aumenta el valor de `quantity`.
+Si se agrega nuevamente el mismo servicio a una reserva, no se duplica el objeto. Se incrementa el valor de `quantity`.
 
 ## Crear una reserva
 
@@ -284,7 +334,10 @@ En este ejemplo:
 - `1` es el ID de la reserva.
 - `2` es el ID del servicio.
 
-Antes de agregar el servicio se valida que existan tanto la reserva como el servicio.
+Antes de agregar el servicio se valida:
+
+- que la reserva exista;
+- que el servicio exista mediante `ServiceManager`.
 
 La primera vez se guarda:
 
@@ -334,7 +387,7 @@ Los datos JSON se convierten a objetos o arrays de JavaScript mediante:
 JSON.parse()
 ```
 
-y antes de guardarlos nuevamente se convierten a JSON mediante:
+Antes de guardarlos nuevamente se convierten a JSON mediante:
 
 ```js
 JSON.stringify()
@@ -351,9 +404,9 @@ src/
 ├── config/
 │   └── env.config.js
 │
-├── data/
-│   ├── services.json
-│   └── bookings.json
+├── controllers/
+│   ├── services.controller.js
+│   └── bookings.controller.js
 │
 ├── managers/
 │   ├── ServiceManager.js
@@ -362,6 +415,10 @@ src/
 ├── routes/
 │   ├── services.router.js
 │   └── bookings.router.js
+│
+├── data/
+│   ├── services.json
+│   └── bookings.json
 │
 ├── app.js
 └── server.js
@@ -372,6 +429,28 @@ package-lock.json
 .gitignore
 README.md
 ```
+
+## Controllers
+
+`services.controller.js` contiene las funciones HTTP relacionadas con servicios:
+
+```text
+getServices()
+getServiceById()
+createService()
+updateService()
+deleteService()
+```
+
+`bookings.controller.js` contiene las funciones HTTP relacionadas con reservas:
+
+```text
+createBooking()
+getBookingById()
+addServiceToBooking()
+```
+
+Los controllers son los encargados de trabajar con `req` y `res`.
 
 ## Managers
 
@@ -393,7 +472,24 @@ getBookingById()
 addServiceToBooking()
 ```
 
-## Archivos no incluidos en el repositorio
+Los managers no utilizan `req` ni `res`.
+
+## Routers
+
+Los archivos:
+
+```text
+services.router.js
+bookings.router.js
+```
+
+definen únicamente los endpoints de la API y los conectan con sus controllers.
+
+No contienen lógica de acceso a archivos JSON.
+
+---
+
+# Archivos no incluidos en el repositorio
 
 El repositorio no incluye:
 
@@ -408,3 +504,13 @@ Estos archivos y carpetas se encuentran excluidos mediante `.gitignore`.
 ## Persistencia comprobada
 
 Los datos almacenados en `services.json` y `bookings.json` permanecen guardados después de detener y volver a iniciar el servidor.
+
+## Organización comprobada
+
+La API mantiene los mismos endpoints de las entregas anteriores, pero ahora las responsabilidades se encuentran separadas entre:
+
+```text
+Routes → Controllers → Managers → JSON
+```
+
+Esta estructura facilita el mantenimiento y prepara el proyecto para futuras etapas del curso.
