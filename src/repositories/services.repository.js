@@ -1,7 +1,7 @@
 import ServicesDAO from '../dao/services.dao.js';
 
 class ServicesRepository {
-  constructor(dao = new ServicesDAO('./src/data/services.json')) {
+  constructor(dao = new ServicesDAO()) {
     this.dao = dao;
   }
 

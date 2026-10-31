@@ -64,18 +64,25 @@ class ServicesService {
       throw new Error('El precio no puede ser negativo');
     }
 
+    const parsedAvailable =
+      available === true || available === 'true';
+
     return this.repository.create({
       name,
       description,
       duration: Number(duration),
       price: Number(price),
       category,
-      available: Boolean(available)
+      available: parsedAvailable
     });
   }
 
   async updateService(id, data) {
-    const { id: ignoredId, ...updateData } = data;
+    const {
+      id: ignoredId,
+      _id: ignoredMongoId,
+      ...updateData
+    } = data;
 
     const updatedService = await this.repository.update(
       id,

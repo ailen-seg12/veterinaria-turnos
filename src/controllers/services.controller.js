@@ -27,7 +27,7 @@ export const getServices = async (req, res) => {
 // GET /api/services/:sid
 export const getServiceById = async (req, res) => {
   try {
-    const sid = Number(req.params.sid);
+    const sid = req.params.sid;
 
     const service = await servicesService.getServiceById(sid);
 
@@ -77,7 +77,7 @@ export const createService = async (req, res) => {
 // PUT /api/services/:sid
 export const updateService = async (req, res) => {
   try {
-    const sid = Number(req.params.sid);
+    const sid = req.params.sid;
 
     const updatedService =
       await servicesService.updateService(
@@ -104,7 +104,7 @@ export const updateService = async (req, res) => {
 // DELETE /api/services/:sid
 export const deleteService = async (req, res) => {
   try {
-    const sid = Number(req.params.sid);
+    const sid = req.params.sid;
 
     const deletedService =
       await servicesService.deleteService(sid);

@@ -1,86 +1,41 @@
-import fs from 'fs/promises';
+import mongoose from 'mongoose';
+import BookingModel from './models/booking.model.js';
 
 class BookingsDAO {
-  constructor(path) {
-    this.path = path;
-  }
 
-  // Lee todas las reservas
+  // Obtiene todas las reservas desde MongoDB
   async getAll() {
-    try {
-      const data = await fs.readFile(this.path, 'utf-8');
-      return JSON.parse(data);
-    } catch (error) {
-      if (error.code === 'ENOENT') {
-        return [];
-      }
-
-      throw error;
-    }
+    return await BookingModel.find();
   }
 
-  // Busca una reserva por ID
+  // Busca una reserva por su _id de MongoDB
   async getById(id) {
-    const bookings = await this.getAll();
-
-    return bookings.find(
-      booking => booking.id === Number(id)
-    ) || null;
-  }
-
-  // Crea una reserva
-  async create(data) {
-    const bookings = await this.getAll();
-
-    const maxId = bookings.reduce(
-      (max, booking) =>
-        booking.id > max ? booking.id : max,
-      0
-    );
-
-    const newBooking = {
-      id: maxId + 1,
-      ...data
-    };
-
-    bookings.push(newBooking);
-
-    await fs.writeFile(
-      this.path,
-      JSON.stringify(bookings, null, 2),
-      'utf-8'
-    );
-
-    return newBooking;
-  }
-
-  // Actualiza una reserva
-  async update(id, data) {
-    const bookings = await this.getAll();
-
-    const index = bookings.findIndex(
-      booking => booking.id === Number(id)
-    );
-
-    if (index === -1) {
+    if (!mongoose.isValidObjectId(id)) {
       return null;
     }
 
-    const currentBooking = bookings[index];
+    return await BookingModel.findById(id);
+  }
 
-    bookings[index] = {
-      ...currentBooking,
-      ...data,
-      id: currentBooking.id
-    };
+  // Crea una nueva reserva
+  async create(data) {
+    return await BookingModel.create(data);
+  }
 
-    await fs.writeFile(
-      this.path,
-      JSON.stringify(bookings, null, 2),
-      'utf-8'
+  // Actualiza una reserva existente
+  async update(id, data) {
+    if (!mongoose.isValidObjectId(id)) {
+      return null;
+    }
+
+    return await BookingModel.findByIdAndUpdate(
+      id,
+      data,
+      {
+        returnDocument: 'after',
+        runValidators: true
+      }
     );
-
-    return bookings[index];
   }
 }
 

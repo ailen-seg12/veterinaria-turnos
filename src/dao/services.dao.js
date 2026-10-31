@@ -1,111 +1,50 @@
-import fs from 'fs/promises';
+import mongoose from 'mongoose';
+import ServiceModel from './models/service.model.js';
 
 class ServicesDAO {
-  constructor(path) {
-    this.path = path;
-  }
 
-  // Lee todos los servicios del archivo JSON
+  // Obtiene todos los servicios de MongoDB
   async getAll() {
-    try {
-      const data = await fs.readFile(this.path, 'utf-8');
-      return JSON.parse(data);
-    } catch (error) {
-      if (error.code === 'ENOENT') {
-        return [];
-      }
-
-      throw error;
-    }
+    return await ServiceModel.find();
   }
 
-  // Busca un servicio por ID
+  // Busca un servicio por su _id de MongoDB
   async getById(id) {
-    const services = await this.getAll();
+    if (!mongoose.isValidObjectId(id)) {
+      return null;
+    }
 
-    return services.find(
-      service => service.id === Number(id)
-    ) || null;
+    return await ServiceModel.findById(id);
   }
 
-  // Guarda un nuevo servicio
+  // Crea un nuevo servicio
   async create(data) {
-    const services = await this.getAll();
-
-    const maxId = services.reduce(
-      (max, service) =>
-        service.id > max ? service.id : max,
-      0
-    );
-
-    const newService = {
-      id: maxId + 1,
-      ...data
-    };
-
-    services.push(newService);
-
-    await fs.writeFile(
-      this.path,
-      JSON.stringify(services, null, 2),
-      'utf-8'
-    );
-
-    return newService;
+    return await ServiceModel.create(data);
   }
 
   // Actualiza un servicio existente
   async update(id, data) {
-    const services = await this.getAll();
-
-    const index = services.findIndex(
-      service => service.id === Number(id)
-    );
-
-    if (index === -1) {
+    if (!mongoose.isValidObjectId(id)) {
       return null;
     }
 
-    const currentService = services[index];
-
-    services[index] = {
-      ...currentService,
-      ...data,
-      id: currentService.id
-    };
-
-    await fs.writeFile(
-      this.path,
-      JSON.stringify(services, null, 2),
-      'utf-8'
+    return await ServiceModel.findByIdAndUpdate(
+      id,
+      data,
+      {
+        returnDocument: 'after',
+        runValidators: true
+      }
     );
-
-    return services[index];
   }
 
   // Elimina un servicio
   async delete(id) {
-    const services = await this.getAll();
-
-    const index = services.findIndex(
-      service => service.id === Number(id)
-    );
-
-    if (index === -1) {
+    if (!mongoose.isValidObjectId(id)) {
       return null;
     }
 
-    const deletedService = services[index];
-
-    services.splice(index, 1);
-
-    await fs.writeFile(
-      this.path,
-      JSON.stringify(services, null, 2),
-      'utf-8'
-    );
-
-    return deletedService;
+    return await ServiceModel.findByIdAndDelete(id);
   }
 }
 

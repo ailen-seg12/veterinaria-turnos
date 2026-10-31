@@ -72,7 +72,8 @@ class BookingsService {
 
     // Buscamos si ese servicio ya estaba agregado
     const existingService = booking.services.find(
-      item => item.service === Number(serviceId)
+      item =>
+        item.service.toString() === service._id.toString()
     );
 
     if (existingService) {
@@ -81,7 +82,7 @@ class BookingsService {
     } else {
       // Si no existe, lo agregamos por primera vez
       booking.services.push({
-        service: Number(serviceId),
+        service: service._id,
         quantity: 1
       });
     }

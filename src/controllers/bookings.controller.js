@@ -30,7 +30,7 @@ export const createBooking = async (req, res) => {
 // GET /api/bookings/:bid
 export const getBookingById = async (req, res) => {
   try {
-    const bid = Number(req.params.bid);
+    const bid = req.params.bid;
 
     const booking =
       await bookingsService.getBookingById(bid);
@@ -54,8 +54,8 @@ export const getBookingById = async (req, res) => {
 // POST /api/bookings/:bid/services/:sid
 export const addServiceToBooking = async (req, res) => {
   try {
-    const bid = Number(req.params.bid);
-    const sid = Number(req.params.sid);
+    const bid = req.params.bid;
+    const sid = req.params.sid;
 
     const updatedBooking =
       await bookingsService.addServiceToBooking(
