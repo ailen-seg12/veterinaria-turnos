@@ -1,0 +1,22 @@
+<h1>Servicios disponibles</h1>
+
+<div id="services-container">
+  {{#each services}}
+    <article>
+      <h2>{{name}}</h2>
+
+      <p>{{description}}</p>
+
+      <p><strong>Duración:</strong> {{duration}} minutos</p>
+
+      <p><strong>Precio:</strong> ${{price}}</p>
+
+      <p><strong>Categoría:</strong> {{category}}</p>
+
+      <p><strong>Disponible:</strong> {{available}}</p>
+    </article>
+  {{/each}}
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/socket.js"></script>

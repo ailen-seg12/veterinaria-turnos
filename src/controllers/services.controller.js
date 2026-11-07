@@ -55,6 +55,20 @@ export const createService = async (req, res) => {
     const newService =
       await servicesService.createService(serviceData);
 
+    // Obtenemos Socket.IO desde Express
+    const io = req.app.get('io');
+
+    // Obtenemos la lista actualizada de servicios
+    const services = await servicesService.getServices();
+
+    // Convertimos documentos Mongoose a objetos simples
+    const plainServices = services.map(service =>
+      service.toObject()
+    );
+
+    // Avisamos a todos los clientes conectados
+    io.emit('servicesUpdated', plainServices);
+
     return res.status(201).json(newService);
 
   } catch (error) {
