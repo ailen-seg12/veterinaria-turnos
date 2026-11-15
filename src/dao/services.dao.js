@@ -3,10 +3,37 @@ import ServiceModel from './models/service.model.js';
 
 class ServicesDAO {
 
-  // Obtiene todos los servicios de MongoDB
-  async getAll() {
-    return await ServiceModel.find();
+  // Obtiene todos los servicios.
+  // Lo seguimos usando para vistas y Socket.IO.
+  async getAll(filter = {}) {
+    return await ServiceModel.find(filter);
   }
+
+
+  // Consulta avanzada con filtros, paginación y ordenamiento.
+  async getPaginated({
+    filter = {},
+    skip = 0,
+    limit = 10,
+    sort = {}
+  } = {}) {
+
+    const [services, total] = await Promise.all([
+      ServiceModel
+        .find(filter)
+        .sort(sort)
+        .skip(skip)
+        .limit(limit),
+
+      ServiceModel.countDocuments(filter)
+    ]);
+
+    return {
+      services,
+      total
+    };
+  }
+
 
   // Busca un servicio por su _id de MongoDB
   async getById(id) {
@@ -17,10 +44,12 @@ class ServicesDAO {
     return await ServiceModel.findById(id);
   }
 
+
   // Crea un nuevo servicio
   async create(data) {
     return await ServiceModel.create(data);
   }
+
 
   // Actualiza un servicio existente
   async update(id, data) {
@@ -37,6 +66,7 @@ class ServicesDAO {
       }
     );
   }
+
 
   // Elimina un servicio
   async delete(id) {

@@ -6,15 +6,12 @@ const servicesService = new ServicesService();
 // GET /api/services
 export const getServices = async (req, res) => {
   try {
-    const category = req.query.category;
-    const available = req.query.available;
+    const result =
+      await servicesService.getPaginatedServices(
+        req.query
+      );
 
-    const services = await servicesService.getServices({
-      category,
-      available
-    });
-
-    return res.status(200).json(services);
+    return res.status(200).json(result);
 
   } catch (error) {
     return res.status(500).json({
@@ -29,7 +26,8 @@ export const getServiceById = async (req, res) => {
   try {
     const sid = req.params.sid;
 
-    const service = await servicesService.getServiceById(sid);
+    const service =
+      await servicesService.getServiceById(sid);
 
     return res.status(200).json(service);
 
@@ -59,7 +57,8 @@ export const createService = async (req, res) => {
     const io = req.app.get('io');
 
     // Obtenemos la lista actualizada de servicios
-    const services = await servicesService.getServices();
+    const services =
+      await servicesService.getServices();
 
     // Convertimos documentos Mongoose a objetos simples
     const plainServices = services.map(service =>

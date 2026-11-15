@@ -8,13 +8,16 @@ class BookingsDAO {
     return await BookingModel.find();
   }
 
-  // Busca una reserva por su _id de MongoDB
+  // Busca una reserva por su _id y trae
+  // los datos completos de los servicios asociados
   async getById(id) {
     if (!mongoose.isValidObjectId(id)) {
       return null;
     }
 
-    return await BookingModel.findById(id);
+    return await BookingModel
+      .findById(id)
+      .populate('services.service');
   }
 
   // Crea una nueva reserva

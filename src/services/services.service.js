@@ -5,29 +5,128 @@ class ServicesService {
     this.repository = repository;
   }
 
-  async getServices(filters = {}) {
-    const services = await this.repository.getAll();
 
-    let result = services;
+  // Se sigue usando para vistas y Socket.IO
+  async getServices(filters = {}) {
+    const filter = {};
 
     if (filters.category) {
-      result = result.filter(
-        service => service.category === filters.category
-      );
+      filter.category = filters.category;
     }
 
     if (filters.available !== undefined) {
-      const available =
+      filter.available =
         filters.available === true ||
         filters.available === 'true';
-
-      result = result.filter(
-        service => service.available === available
-      );
     }
 
-    return result;
+    return this.repository.getAll(filter);
   }
+
+
+  // GET /api/services con consultas avanzadas
+  async getPaginatedServices(query = {}) {
+    const {
+      category,
+      available,
+      page = 1,
+      limit = 10,
+      sortBy = 'price',
+      order = 'asc'
+    } = query;
+
+    // -------------------------
+    // FILTROS
+    // -------------------------
+    const filter = {};
+
+    if (category) {
+      filter.category = category;
+    }
+
+    if (available !== undefined) {
+      filter.available =
+        available === true ||
+        available === 'true';
+    }
+
+
+    // -------------------------
+    // PAGINACIÓN
+    // -------------------------
+    const currentPage =
+      Number(page) > 0 ? Number(page) : 1;
+
+    const currentLimit =
+      Number(limit) > 0 ? Number(limit) : 10;
+
+    const skip =
+      (currentPage - 1) * currentLimit;
+
+
+    // -------------------------
+    // ORDENAMIENTO
+    // -------------------------
+    const allowedSortFields = [
+      'name',
+      'price',
+      'duration',
+      'category'
+    ];
+
+    const selectedSortField =
+      allowedSortFields.includes(sortBy)
+        ? sortBy
+        : 'price';
+
+    const sortOrder =
+      order === 'desc' ? -1 : 1;
+
+    const sort = {
+      [selectedSortField]: sortOrder
+    };
+
+
+    // -------------------------
+    // CONSULTA A MONGODB
+    // -------------------------
+    const {
+      services,
+      total
+    } = await this.repository.getPaginated({
+      filter,
+      skip,
+      limit: currentLimit,
+      sort
+    });
+
+
+    // -------------------------
+    // METADATA
+    // -------------------------
+    const totalPages =
+      Math.ceil(total / currentLimit);
+
+    const hasPrevPage =
+      currentPage > 1;
+
+    const hasNextPage =
+      currentPage < totalPages;
+
+
+    return {
+      services,
+      pagination: {
+        totalResults: total,
+        page: currentPage,
+        limit: currentLimit,
+        totalPages,
+        hasPrevPage,
+        hasNextPage
+      }
+    };
+  }
+
 
   async getServiceById(id) {
     const service = await this.repository.getById(id);
@@ -38,6 +137,7 @@ class ServicesService {
 
     return service;
   }
+
 
   async createService(data) {
     const {
@@ -65,7 +165,8 @@ class ServicesService {
     }
 
     const parsedAvailable =
-      available === true || available === 'true';
+      available === true ||
+      available === 'true';
 
     return this.repository.create({
       name,
@@ -77,6 +178,7 @@ class ServicesService {
     });
   }
 
+
   async updateService(id, data) {
     const {
       id: ignoredId,
@@ -84,10 +186,11 @@ class ServicesService {
       ...updateData
     } = data;
 
-    const updatedService = await this.repository.update(
-      id,
-      updateData
-    );
+    const updatedService =
+      await this.repository.update(
+        id,
+        updateData
+      );
 
     if (!updatedService) {
       throw new Error('Servicio no encontrado');
@@ -96,8 +199,10 @@ class ServicesService {
     return updatedService;
   }
 
+
   async deleteService(id) {
-    const service = await this.repository.getById(id);
+    const service =
+      await this.repository.getById(id);
 
     if (!service) {
       throw new Error('Servicio no encontrado');
