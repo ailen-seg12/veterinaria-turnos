@@ -1,8 +1,13 @@
 import ServicesRepository from '../repositories/services.repository.js';
+import BookingsRepository from '../repositories/bookings.repository.js';
 
 class ServicesService {
-  constructor(repository = new ServicesRepository()) {
+  constructor(
+    repository = new ServicesRepository(),
+    bookingsRepository = new BookingsRepository()
+  ) {
     this.repository = repository;
+    this.bookingsRepository = bookingsRepository;
   }
 
 
@@ -34,6 +39,7 @@ class ServicesService {
       sortBy = 'price',
       order = 'asc'
     } = query;
+
 
     // -------------------------
     // FILTROS
@@ -129,10 +135,13 @@ class ServicesService {
 
 
   async getServiceById(id) {
-    const service = await this.repository.getById(id);
+    const service =
+      await this.repository.getById(id);
 
     if (!service) {
-      throw new Error('Servicio no encontrado');
+      throw new Error(
+        'Servicio no encontrado'
+      );
     }
 
     return service;
@@ -157,11 +166,15 @@ class ServicesService {
       !category ||
       available === undefined
     ) {
-      throw new Error('Faltan campos obligatorios');
+      throw new Error(
+        'Faltan campos obligatorios'
+      );
     }
 
     if (Number(price) < 0) {
-      throw new Error('El precio no puede ser negativo');
+      throw new Error(
+        'El precio no puede ser negativo'
+      );
     }
 
     const parsedAvailable =
@@ -193,7 +206,9 @@ class ServicesService {
       );
 
     if (!updatedService) {
-      throw new Error('Servicio no encontrado');
+      throw new Error(
+        'Servicio no encontrado'
+      );
     }
 
     return updatedService;
@@ -201,11 +216,28 @@ class ServicesService {
 
 
   async deleteService(id) {
+    // Primero verificamos que exista
     const service =
       await this.repository.getById(id);
 
     if (!service) {
-      throw new Error('Servicio no encontrado');
+      throw new Error(
+        'Servicio no encontrado'
+      );
+    }
+
+    // Consultamos si el servicio
+    // está asociado a alguna reserva
+    const bookingsUsingService =
+      await this.bookingsRepository
+        .countByServiceId(id);
+
+    // Si ya fue usado, no se elimina
+    // para no romper el historial
+    if (bookingsUsingService > 0) {
+      throw new Error(
+        'No se puede eliminar un servicio asociado a reservas'
+      );
     }
 
     return this.repository.delete(id);

@@ -1,24 +1,214 @@
-body {
-  font-family: Arial, sans-serif;
-  margin: 40px;
-  background-color: #f5f5f5;
+* {
+  box-sizing: border-box;
 }
 
-h1 {
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f5f7f6;
+  color: #263238;
+}
+
+
+/* -------------------------
+   HEADER
+------------------------- */
+
+.main-header {
+  background-color: #ffffff;
+  padding: 24px 40px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  border-bottom: 1px solid #dddddd;
+}
+
+.main-header h1 {
+  margin: 0;
+  font-size: 26px;
+}
+
+.main-header p {
+  margin: 6px 0 0;
+  color: #666666;
+}
+
+.main-header nav {
+  display: flex;
+  gap: 12px;
+}
+
+.main-header nav a {
+  text-decoration: none;
+  color: #333333;
+
+  padding: 10px 14px;
+
+  border: 1px solid #dddddd;
+  border-radius: 6px;
+
+  background-color: #ffffff;
+}
+
+.main-header nav a:hover {
+  background-color: #f0f0f0;
+}
+
+
+/* -------------------------
+   CONTENIDO
+------------------------- */
+
+.main-content {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+.page-header {
   margin-bottom: 30px;
 }
 
-article {
-  background-color: white;
-  padding: 20px;
-  margin-bottom: 20px;
-  border-radius: 8px;
+.page-header h2 {
+  margin-bottom: 8px;
+  font-size: 28px;
 }
 
-article h2 {
+.page-header p {
+  color: #666666;
+}
+
+
+/* -------------------------
+   SERVICIOS
+------------------------- */
+
+.services-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      auto-fit,
+      minmax(280px, 1fr)
+    );
+
+  gap: 20px;
+}
+
+.service-card {
+  background-color: #ffffff;
+
+  padding: 22px;
+
+  border-radius: 10px;
+
+  border: 1px solid #e3e3e3;
+
+  box-shadow:
+    0 2px 6px
+    rgba(0, 0, 0, 0.05);
+}
+
+.service-card-header {
+  display: flex;
+
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 15px;
+
+  margin-bottom: 16px;
+}
+
+.service-card h3 {
+  margin: 0;
+  font-size: 21px;
+}
+
+.description {
+  color: #555555;
+  margin-bottom: 20px;
+}
+
+.service-info p {
+  margin: 8px 0;
+}
+
+
+/* -------------------------
+   ESTADO
+------------------------- */
+
+.status {
+  padding: 6px 10px;
+
+  border-radius: 20px;
+
+  font-size: 13px;
+  font-weight: bold;
+
+  white-space: nowrap;
+}
+
+.status.available {
+  background-color: #e3f3e7;
+  color: #236b35;
+}
+
+.status.unavailable {
+  background-color: #f7e4e4;
+  color: #a02727;
+}
+
+
+/* -------------------------
+   SIN RESULTADOS
+------------------------- */
+
+.empty-state {
+  background-color: #ffffff;
+
+  padding: 30px;
+
+  border-radius: 10px;
+
+  border: 1px solid #dddddd;
+
+  text-align: center;
+}
+
+.empty-state h3 {
   margin-top: 0;
 }
 
-p {
-  margin: 8px 0;
+
+/* -------------------------
+   RESPONSIVE
+------------------------- */
+
+@media (max-width: 650px) {
+
+  .main-header {
+    flex-direction: column;
+    align-items: flex-start;
+
+    gap: 20px;
+
+    padding: 20px;
+  }
+
+  .main-header nav {
+    width: 100%;
+  }
+
+  .main-header nav a {
+    flex: 1;
+    text-align: center;
+  }
+
+  .main-content {
+    padding: 25px 16px;
+  }
 }

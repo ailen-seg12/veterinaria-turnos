@@ -128,8 +128,20 @@ export const deleteService = async (req, res) => {
     });
 
   } catch (error) {
+
+    // El servicio no existe
     if (error.message === 'Servicio no encontrado') {
       return res.status(404).json({
+        error: error.message
+      });
+    }
+
+    // El servicio ya está usado en una reserva
+    if (
+      error.message ===
+      'No se puede eliminar un servicio asociado a reservas'
+    ) {
+      return res.status(409).json({
         error: error.message
       });
     }

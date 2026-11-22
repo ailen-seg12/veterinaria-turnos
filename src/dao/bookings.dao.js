@@ -3,13 +3,25 @@ import BookingModel from './models/booking.model.js';
 
 class BookingsDAO {
 
-  // Obtiene todas las reservas desde MongoDB
+  // Obtiene todas las reservas
   async getAll() {
-    return await BookingModel.find();
+    return await BookingModel
+      .find()
+      .populate('services.service');
   }
 
-  // Busca una reserva por su _id y trae
-  // los datos completos de los servicios asociados
+  // Obtiene las reservas de una fecha.
+  // Las canceladas no ocupan horario.
+  async getByDate(date) {
+    return await BookingModel
+      .find({
+        date,
+        status: { $ne: 'cancelado' }
+      })
+      .populate('services.service');
+  }
+
+  // Busca una reserva por ID
   async getById(id) {
     if (!mongoose.isValidObjectId(id)) {
       return null;
@@ -20,12 +32,23 @@ class BookingsDAO {
       .populate('services.service');
   }
 
-  // Crea una nueva reserva
+  // Cuenta cuántas reservas utilizan un servicio
+  async countByServiceId(serviceId) {
+    if (!mongoose.isValidObjectId(serviceId)) {
+      return 0;
+    }
+
+    return await BookingModel.countDocuments({
+      'services.service': serviceId
+    });
+  }
+
+  // Crea una reserva
   async create(data) {
     return await BookingModel.create(data);
   }
 
-  // Actualiza una reserva existente
+  // Actualiza una reserva
   async update(id, data) {
     if (!mongoose.isValidObjectId(id)) {
       return null;

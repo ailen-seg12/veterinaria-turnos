@@ -1,31 +1,10 @@
 # Veterinaria Turnos
 
-Sistema backend para la gestión de servicios y reservas de una veterinaria.
+API REST desarrollada con Node.js y Express para gestionar servicios veterinarios y reservas de turnos.
 
-## Descripción
+El proyecto utiliza MongoDB Atlas como persistencia principal y aplica una arquitectura en capas para separar rutas, controladores, lógica de negocio y acceso a datos.
 
-Este proyecto implementa una aplicación backend desarrollada con Node.js y Express.
-
-La aplicación cuenta con:
-
-- API REST para administrar servicios y reservas.
-- Persistencia en MongoDB Atlas mediante Mongoose.
-- Arquitectura en capas.
-- Vistas renderizadas con Handlebars.
-- Comunicación en tiempo real mediante Socket.IO.
-- Consultas avanzadas con filtros, paginación y ordenamiento.
-- Validaciones de datos con Zod.
-- Relaciones entre reservas y servicios mediante ObjectId y `populate()`.
-
-Los principales recursos del sistema son:
-
-- `services`: servicios disponibles de la veterinaria.
-- `bookings`: reservas realizadas por los clientes.
-- `messages`: modelo preparado para almacenar mensajes.
-
----
-
-# Tecnologías utilizadas
+## Tecnologías utilizadas
 
 - Node.js
 - Express
@@ -33,43 +12,472 @@ Los principales recursos del sistema son:
 - Mongoose
 - Zod
 - Handlebars
-- express-handlebars
 - Socket.IO
-- dotenv
-- body-parser
 - JavaScript
-- HTML
-- CSS
+- dotenv
 
----
+## Arquitectura
 
-# Instalación
+El proyecto está organizado mediante la siguiente arquitectura:
 
-Clonar el repositorio e instalar las dependencias:
-
-```bash
-npm install
+```text
+Routes
+  ↓
+Controllers
+  ↓
+Services
+  ↓
+Repositories
+  ↓
+DAO
+  ↓
+Models
+  ↓
+MongoDB Atlas
 ```
+
+Las responsabilidades se encuentran separadas:
+
+- **Routes:** definen los endpoints y middlewares.
+- **Controllers:** reciben las solicitudes HTTP y generan las respuestas.
+- **Services:** contienen la lógica y reglas de negocio.
+- **Repositories:** conectan los servicios con los DAO.
+- **DAO:** realizan las operaciones sobre MongoDB.
+- **Models:** definen los esquemas de Mongoose.
+- **Middlewares:** realizan validaciones antes de procesar los datos.
+
+## Servicios veterinarios
+
+Cada servicio contiene:
+
+- `name`
+- `description`
+- `duration`
+- `price`
+- `category`
+- `available`
+
+Ejemplos de servicios disponibles en el sistema:
+
+- Consulta
+- Control
+- Castración
+- Desparasitación
+
+## Endpoints de servicios
+
+### Obtener servicios
+
+```http
+GET /api/services
+```
+
+### Obtener un servicio
+
+```http
+GET /api/services/:sid
+```
+
+### Crear un servicio
+
+```http
+POST /api/services
+```
+
+### Actualizar un servicio
+
+```http
+PUT /api/services/:sid
+```
+
+### Eliminar un servicio
+
+```http
+DELETE /api/services/:sid
+```
+
+## Consultas avanzadas
+
+El endpoint:
+
+```http
+GET /api/services
+```
+
+permite utilizar los siguientes Query Params:
+
+- `category`
+- `available`
+- `page`
+- `limit`
+- `sortBy`
+- `order`
+
+Ejemplo:
+
+```http
+GET /api/services?category=consulta&available=true&page=1&limit=10&sortBy=price&order=asc
+```
+
+La respuesta incluye los servicios encontrados y metadata de paginación:
+
+```json
+{
+  "services": [],
+  "pagination": {
+    "totalResults": 0,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 0,
+    "hasPrevPage": false,
+    "hasNextPage": false
+  }
+}
+```
+
+## Reservas
+
+Cada reserva contiene:
+
+- `clientName`
+- `clientEmail`
+- `date`
+- `time`
+- `status`
+- `services`
+
+Una reserva nueva comienza automáticamente con estado:
+
+```text
+pendiente
+```
+
+## Endpoints de reservas
+
+### Crear una reserva
+
+```http
+POST /api/bookings
+```
+
+Ejemplo:
+
+```json
+{
+  "clientName": "Ailen Segovia",
+  "clientEmail": "ailen@mail.com",
+  "date": "2026-11-25",
+  "time": "10:00"
+}
+```
+
+### Consultar una reserva
+
+```http
+GET /api/bookings/:bid
+```
+
+### Asociar un servicio a una reserva
+
+```http
+POST /api/bookings/:bid/services/:sid
+```
+
+## Relación entre reservas y servicios
+
+Las reservas almacenan referencias a los servicios utilizando `ObjectId`.
+
+La estructura utilizada es:
+
+```js
+{
+  service: ObjectId,
+  quantity: Number
+}
+```
+
+No se guarda una copia completa del servicio dentro de la reserva.
+
+Esto evita duplicar información en MongoDB.
+
+## Populate
+
+Cuando se consulta una reserva mediante:
+
+```http
+GET /api/bookings/:bid
+```
+
+se utiliza:
+
+```js
+populate('services.service')
+```
+
+Esto permite obtener los datos completos del servicio asociado.
+
+MongoDB continúa almacenando únicamente la referencia `ObjectId`.
+
+## Validaciones con Zod
+
+El proyecto utiliza Zod para validar la información antes de llegar a MongoDB.
+
+Se validan:
+
+- creación de servicios;
+- actualización de servicios;
+- creación de reservas;
+- IDs de reserva y servicio;
+- formato de email;
+- fechas;
+- horarios.
+
+Cuando los datos son inválidos, la API devuelve:
+
+```http
+400 Bad Request
+```
+
+junto con información sobre el campo incorrecto.
+
+## Reglas de negocio
+
+### Servicio existente
+
+Solo puede asociarse a una reserva un servicio previamente registrado.
+
+### Servicio disponible
+
+Un servicio solamente puede reservarse cuando:
+
+```js
+available === true
+```
+
+Si se encuentra deshabilitado, la operación devuelve:
+
+```http
+409 Conflict
+```
+
+### Un único veterinario
+
+Para esta versión se considera que la veterinaria posee un único veterinario.
+
+Por lo tanto, dos turnos no pueden ocupar el mismo período horario.
+
+### Duración de los turnos
+
+La duración de una reserva se calcula utilizando la duración de los servicios asociados.
+
+Ejemplo:
+
+```text
+Control
+Duración: 30 minutos
+
+Reserva: 17:00
+Horario ocupado: 17:00 → 17:30
+```
+
+### No superposición
+
+No pueden existir reservas activas cuyos horarios se superpongan en la misma fecha.
+
+Ejemplo:
+
+```text
+Reserva A: 17:00 → 17:30
+Reserva B: 17:15 → 17:45
+```
+
+La Reserva B es rechazada.
+
+### Turnos consecutivos
+
+Sí se permite que un turno comience exactamente cuando termina otro.
+
+```text
+17:00 → 17:30
+17:30 → 18:00
+```
+
+### Varios servicios
+
+Si una reserva contiene varios servicios, las duraciones se utilizan para calcular el tiempo total ocupado.
+
+### Quantity
+
+Si el mismo servicio vuelve a agregarse a una reserva, se incrementa:
+
+```text
+quantity
+```
+
+La nueva duración resultante también debe respetar la disponibilidad horaria.
+
+Si genera una superposición, la modificación se rechaza.
+
+### Fecha válida
+
+Las fechas utilizan el formato:
+
+```text
+YYYY-MM-DD
+```
+
+No se permiten:
+
+- fechas inexistentes;
+- fechas anteriores al día actual.
+
+### Hora válida
+
+Los horarios utilizan:
+
+```text
+HH:mm
+```
+
+y deben encontrarse entre:
+
+```text
+00:00 y 23:59
+```
+
+### Horarios pasados
+
+Si se crea una reserva para el día actual, no puede utilizarse un horario que ya haya pasado.
+
+### Estado inicial
+
+El estado inicial siempre es:
+
+```text
+pendiente
+```
+
+El cliente no puede definir otro estado durante la creación.
+
+### Protección del historial
+
+Si un servicio ya está asociado a una reserva, no puede eliminarse físicamente.
+
+El endpoint:
+
+```http
+DELETE /api/services/:sid
+```
+
+devuelve:
+
+```http
+409 Conflict
+```
+
+En caso de que el servicio deje de ofrecerse, debe utilizarse:
+
+```json
+{
+  "available": false
+}
+```
+
+Esto permite conservar correctamente las reservas históricas.
+
+## Handlebars
+
+El proyecto incluye vistas simples desarrolladas con Handlebars.
+
+### Todos los servicios
+
+```text
+http://localhost:8080/views/services
+```
+
+### Servicios disponibles
+
+```text
+http://localhost:8080/views/availability
+```
+
+Las vistas muestran:
+
+- nombre;
+- descripción;
+- duración;
+- precio;
+- categoría;
+- disponibilidad.
+
+## Socket.IO
+
+La vista:
+
+```text
+/views/services
+```
+
+utiliza Socket.IO para actualizar el listado de servicios en tiempo real.
+
+Cuando se crea un nuevo servicio mediante:
+
+```http
+POST /api/services
+```
+
+el servidor emite un evento a los clientes conectados y el nuevo servicio aparece sin necesidad de recargar la página.
 
 ## Variables de entorno
 
-Crear un archivo `.env` tomando como referencia `.env.example`.
+La conexión a MongoDB y demás configuraciones se manejan mediante variables de entorno.
 
 Ejemplo:
 
 ```env
 PORT=8080
-NODE_ENV=development
 MONGO_URI=tu_uri_de_mongodb
+NODE_ENV=development
 ```
 
-El archivo `.env` contiene información sensible y no debe subirse al repositorio.
+El repositorio incluye:
 
----
+```text
+.env.example
+```
 
-# Ejecutar el proyecto
+pero no debe incluir:
 
-Modo normal:
+```text
+.env
+node_modules
+```
+
+ni credenciales reales.
+
+## Instalación
+
+Clonar el repositorio:
+
+```bash
+git clone https://github.com/ailen-seg12/veterinaria-turnos.git
+```
+
+Ingresar a la carpeta:
+
+```bash
+cd veterinaria-turnos
+```
+
+Instalar dependencias:
+
+```bash
+npm install
+```
+
+Crear el archivo `.env` tomando como referencia `.env.example`.
+
+Iniciar el servidor:
 
 ```bash
 npm start
@@ -81,168 +489,57 @@ Modo desarrollo:
 npm run dev
 ```
 
-El servidor se ejecuta por defecto en:
+Servidor local:
 
 ```text
 http://localhost:8080
 ```
 
-La aplicación primero establece la conexión con MongoDB Atlas y luego inicia el servidor HTTP utilizado por Express y Socket.IO.
-
----
-
-# Arquitectura
-
-La aplicación utiliza una arquitectura en capas:
+## Estructura principal
 
 ```text
-Cliente
-  ↓
-Router
-  ↓
-Middleware de validación
-  ↓
-Controller
-  ↓
-Service
-  ↓
-Repository
-  ↓
-DAO
-  ↓
-Mongoose Model
-  ↓
-MongoDB Atlas
+src/
+├── config/
+├── controllers/
+├── dao/
+│   └── models/
+├── middlewares/
+├── public/
+│   ├── css/
+│   └── js/
+├── repositories/
+├── routes/
+├── services/
+├── validations/
+├── views/
+│   └── layouts/
+└── app.js
 ```
 
-Cada capa tiene una responsabilidad específica.
+## Persistencia
 
-## Routes
-
-Los routers definen los endpoints disponibles y los conectan con los controllers.
-
-Las rutas no contienen lógica de negocio ni realizan acceso directo a MongoDB.
-
-## Middlewares
-
-Los middlewares de validación comprueban los datos antes de que lleguen a los controllers.
-
-Se utilizan para validar:
-
-- `req.body`
-- `req.params`
-
-Si los datos son inválidos, la API devuelve:
+La persistencia principal utiliza:
 
 ```text
-400 Bad Request
+MongoDB Atlas + Mongoose
 ```
 
-antes de realizar operaciones en MongoDB.
+Los servicios y reservas permanecen almacenados en MongoDB.
 
-## Controllers
+Las relaciones entre ambas entidades se realizan mediante referencias `ObjectId`.
 
-Los controllers:
+## Alcance
 
-- reciben las solicitudes HTTP;
-- leen `req.params`, `req.query` y `req.body`;
-- llaman al service correspondiente;
-- manejan códigos de estado HTTP;
-- generan respuestas JSON o renderizan vistas.
+Esta versión final se concentra en la gestión de:
 
-## Services
+- servicios veterinarios;
+- reservas;
+- relaciones entre reservas y servicios;
+- disponibilidad de turnos;
+- reglas de negocio;
+- consultas avanzadas;
+- validaciones;
+- vistas simples;
+- actualización en tiempo real.
 
-Los services contienen las reglas de negocio.
-
-Entre sus responsabilidades se encuentran:
-
-- verificar que existan servicios y reservas;
-- agregar servicios a reservas;
-- incrementar la cantidad cuando un servicio ya se encuentra agregado;
-- construir filtros;
-- calcular la paginación;
-- definir las opciones de ordenamiento.
-
-## Repositories
-
-Los repositories funcionan como intermediarios entre los services y los DAO.
-
-## DAO
-
-Los DAO realizan el acceso a MongoDB mediante los modelos de Mongoose.
-
-Entre sus operaciones se encuentran:
-
-- búsqueda de documentos;
-- creación;
-- actualización;
-- eliminación;
-- paginación;
-- ordenamiento;
-- conteo de documentos;
-- `populate()`.
-
-## Models
-
-Los modelos definen los esquemas de Mongoose utilizados para almacenar la información en MongoDB.
-
----
-
-# Modelos
-
-Los modelos se encuentran en:
-
-```text
-src/dao/models/
-```
-
-Modelos disponibles:
-
-```text
-service.model.js
-booking.model.js
-message.model.js
-```
-
-## Service
-
-Un servicio contiene:
-
-- `name`
-- `description`
-- `duration`
-- `price`
-- `category`
-- `available`
-
-MongoDB genera automáticamente el campo `_id`.
-
-También se utilizan `createdAt` y `updatedAt` mediante `timestamps`.
-
-## Booking
-
-Una reserva contiene:
-
-- `clientName`
-- `clientEmail`
-- `date`
-- `time`
-- `status`
-- `services`
-
-Los servicios asociados se almacenan mediante referencias de MongoDB:
-
-```text
-services: [
-  {
-    service: ObjectId,
-    quantity: Number
-  }
-]
-```
-
-El campo `service` referencia un documento de la colección `services`.
-
-No se guarda el objeto completo del servicio dentro de la reserva.
-
-Si se agrega nuevamente el mismo servicio a
+El proyecto queda preparado para futuras ampliaciones, como mascotas, dueños, veterinarios, historias clínicas y mensajería.

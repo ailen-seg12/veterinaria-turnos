@@ -1,20 +1,31 @@
 import BookingsService from '../services/bookings.service.js';
 
-const bookingsService = new BookingsService();
+const bookingsService =
+  new BookingsService();
 
 
 // POST /api/bookings
-export const createBooking = async (req, res) => {
+export const createBooking =
+async (req, res) => {
   try {
-    const bookingData = req.body ?? {};
+    const bookingData =
+      req.body ?? {};
 
     const newBooking =
-      await bookingsService.createBooking(bookingData);
+      await bookingsService.createBooking(
+        bookingData
+      );
 
-    return res.status(201).json(newBooking);
+    return res
+      .status(201)
+      .json(newBooking);
 
   } catch (error) {
-    if (error.message === 'Faltan campos obligatorios') {
+
+    if (
+      error.message ===
+      'Faltan campos obligatorios'
+    ) {
       return res.status(400).json({
         error: error.message
       });
@@ -28,47 +39,24 @@ export const createBooking = async (req, res) => {
 
 
 // GET /api/bookings/:bid
-export const getBookingById = async (req, res) => {
+export const getBookingById =
+async (req, res) => {
   try {
     const bid = req.params.bid;
 
     const booking =
-      await bookingsService.getBookingById(bid);
+      await bookingsService
+        .getBookingById(bid);
 
-    return res.status(200).json(booking);
-
-  } catch (error) {
-    if (error.message === 'Reserva no encontrada') {
-      return res.status(404).json({
-        error: error.message
-      });
-    }
-
-    return res.status(500).json({
-      error: 'Error al obtener la reserva'
-    });
-  }
-};
-
-
-// POST /api/bookings/:bid/services/:sid
-export const addServiceToBooking = async (req, res) => {
-  try {
-    const bid = req.params.bid;
-    const sid = req.params.sid;
-
-    const updatedBooking =
-      await bookingsService.addServiceToBooking(
-        bid,
-        sid
-      );
-
-    return res.status(200).json(updatedBooking);
+    return res
+      .status(200)
+      .json(booking);
 
   } catch (error) {
+
     if (
-      error.message === 'Reserva no encontrada' ||
-      error.message === 'Servicio no encontrado'
+      error.message ===
+      'Reserva no encontrada'
     ) {
       return res.status(404).json({
         error: error.message
@@ -76,7 +64,58 @@ export const addServiceToBooking = async (req, res) => {
     }
 
     return res.status(500).json({
-      error: 'Error al agregar el servicio a la reserva'
+      error:
+        'Error al obtener la reserva'
+    });
+  }
+};
+
+
+// POST /api/bookings/:bid/services/:sid
+export const addServiceToBooking =
+async (req, res) => {
+  try {
+    const bid = req.params.bid;
+    const sid = req.params.sid;
+
+    const updatedBooking =
+      await bookingsService
+        .addServiceToBooking(
+          bid,
+          sid
+        );
+
+    return res
+      .status(200)
+      .json(updatedBooking);
+
+  } catch (error) {
+
+    if (
+      error.message ===
+        'Reserva no encontrada' ||
+      error.message ===
+        'Servicio no encontrado'
+    ) {
+      return res.status(404).json({
+        error: error.message
+      });
+    }
+
+    if (
+      error.message ===
+        'Servicio no disponible' ||
+      error.message ===
+        'El horario seleccionado se superpone con otra reserva'
+    ) {
+      return res.status(409).json({
+        error: error.message
+      });
+    }
+
+    return res.status(500).json({
+      error:
+        'Error al agregar el servicio a la reserva'
     });
   }
 };

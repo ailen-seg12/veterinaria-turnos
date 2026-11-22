@@ -1,22 +1,73 @@
-<h1>Servicios disponibles</h1>
+<section class="page-header">
+  <h2>Servicios veterinarios</h2>
 
-<div id="services-container">
+  <p>
+    Listado completo de servicios registrados
+    en el sistema.
+  </p>
+</section>
+
+
+<div
+  id="services-container"
+  class="services-grid"
+>
+
   {{#each services}}
-    <article>
-      <h2>{{name}}</h2>
 
-      <p>{{description}}</p>
+    <article class="service-card">
 
-      <p><strong>Duración:</strong> {{duration}} minutos</p>
+      <div class="service-card-header">
 
-      <p><strong>Precio:</strong> ${{price}}</p>
+        <h3>{{name}}</h3>
 
-      <p><strong>Categoría:</strong> {{category}}</p>
+        {{#if available}}
 
-      <p><strong>Disponible:</strong> {{available}}</p>
+          <span class="status available">
+            Disponible
+          </span>
+
+        {{else}}
+
+          <span class="status unavailable">
+            No disponible
+          </span>
+
+        {{/if}}
+
+      </div>
+
+
+      <p class="description">
+        {{description}}
+      </p>
+
+
+      <div class="service-info">
+
+        <p>
+          <strong>Duración:</strong>
+          {{duration}} minutos
+        </p>
+
+        <p>
+          <strong>Precio:</strong>
+          ${{price}}
+        </p>
+
+        <p>
+          <strong>Categoría:</strong>
+          {{category}}
+        </p>
+
+      </div>
+
     </article>
+
   {{/each}}
+
 </div>
+
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/socket.js"></script>

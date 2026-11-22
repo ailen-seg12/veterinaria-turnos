@@ -1,17 +1,71 @@
-<h1>Servicios disponibles</h1>
+<section class="page-header">
 
-{{#each services}}
-  <article>
-    <h2>{{name}}</h2>
+  <h2>Servicios disponibles</h2>
 
-    <p>{{description}}</p>
+  <p>
+    Estos son los servicios que actualmente
+    pueden asociarse a nuevas reservas.
+  </p>
 
-    <p><strong>Duración:</strong> {{duration}} minutos</p>
+</section>
 
-    <p><strong>Precio:</strong> ${{price}}</p>
 
-    <p><strong>Categoría:</strong> {{category}}</p>
+<div class="services-grid">
 
-    <p><strong>Disponible:</strong> {{available}}</p>
-  </article>
-{{/each}}
+  {{#each services}}
+
+    <article class="service-card">
+
+      <div class="service-card-header">
+
+        <h3>{{name}}</h3>
+
+        <span class="status available">
+          Disponible
+        </span>
+
+      </div>
+
+
+      <p class="description">
+        {{description}}
+      </p>
+
+
+      <div class="service-info">
+
+        <p>
+          <strong>Duración:</strong>
+          {{duration}} minutos
+        </p>
+
+        <p>
+          <strong>Precio:</strong>
+          ${{price}}
+        </p>
+
+        <p>
+          <strong>Categoría:</strong>
+          {{category}}
+        </p>
+
+      </div>
+
+    </article>
+
+  {{else}}
+
+    <div class="empty-state">
+
+      <h3>No hay servicios disponibles</h3>
+
+      <p>
+        Actualmente no existen servicios
+        habilitados para nuevas reservas.
+      </p>
+
+    </div>
+
+  {{/each}}
+
+</div>
